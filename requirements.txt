@@ -3,3 +3,5 @@ flask_sqlalchemy
 scikit-learn
 pandas
 numpy
+gunicorn
+werkzeug
