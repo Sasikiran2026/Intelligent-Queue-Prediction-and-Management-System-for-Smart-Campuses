@@ -2,74 +2,82 @@ from flask import Flask, render_template, request, redirect, session
 import sqlite3
 from datetime import datetime
 import random
+import os
 
 app = Flask(__name__)
-app.secret_key = "smartqueue_secret"
+app.secret_key = os.getenv('SECRET_KEY', 'smartqueue_secret')
 
-DB = "database.db"
+# Use environment variable for database path, fallback to local file
+DB = os.getenv('DATABASE_PATH', 'database.db')
 
 
 # ---------------- DATABASE ----------------
 def get_db():
-    return sqlite3.connect(DB)
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def init_db():
-    conn = get_db()
-    cur = conn.cursor()
+    try:
+        conn = get_db()
+        cur = conn.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT,
-        password TEXT,
-        phone TEXT,
-        role TEXT
-    )
-    """)
-    # ensure legacy databases gain phone column
-    cur.execute("PRAGMA table_info(users)")
-    existing = [row[1] for row in cur.fetchall()]
-    if 'phone' not in existing:
-        cur.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT,
+            password TEXT,
+            phone TEXT,
+            role TEXT
+        )
+        """)
+        # ensure legacy databases gain phone column
+        cur.execute("PRAGMA table_info(users)")
+        existing = [row[1] for row in cur.fetchall()]
+        if 'phone' not in existing:
+            cur.execute("ALTER TABLE users ADD COLUMN phone TEXT")
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS queue(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        token INTEGER,
-        name TEXT,
-        department TEXT,
-        status TEXT,
-        time TEXT,
-        date TEXT DEFAULT (date('now'))
-    )
-    """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS queue(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token INTEGER,
+            name TEXT,
+            department TEXT,
+            status TEXT,
+            time TEXT,
+            date TEXT DEFAULT (date('now'))
+        )
+        """)
 
-    # Add date column to existing tables if it doesn't exist
-    cur.execute("PRAGMA table_info(queue)")
-    existing = [row[1] for row in cur.fetchall()]
-    if 'date' not in existing:
-        cur.execute("ALTER TABLE queue ADD COLUMN date TEXT")
-        # Update existing records with current date
-        cur.execute("UPDATE queue SET date = date('now') WHERE date IS NULL")
+        # Add date column to existing tables if it doesn't exist
+        cur.execute("PRAGMA table_info(queue)")
+        existing = [row[1] for row in cur.fetchall()]
+        if 'date' not in existing:
+            cur.execute("ALTER TABLE queue ADD COLUMN date TEXT")
+            # Update existing records with current date
+            cur.execute("UPDATE queue SET date = date('now') WHERE date IS NULL")
 
-    # Create archive table for historical data
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS queue_archive(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        token INTEGER,
-        name TEXT,
-        department TEXT,
-        status TEXT,
-        time TEXT,
-        date TEXT,
-        archived_date TEXT DEFAULT (datetime('now'))
-    )
-    """)
+        # Create archive table for historical data
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS queue_archive(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token INTEGER,
+            name TEXT,
+            department TEXT,
+            status TEXT,
+            time TEXT,
+            date TEXT,
+            archived_date TEXT DEFAULT (datetime('now'))
+        )
+        """)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
 
 
 init_db()
@@ -530,5 +538,18 @@ def logout():
 
 
 # ---------------- RUN ----------------
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("index.html"), 404
+
+
+@app.errorhandler(500)
+def server_error(error):
+    return f"Server Error: {error}", 500
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Run with gunicorn in production, debug in development
+    debug_mode = os.getenv('FLASK_ENV') != 'production'
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
