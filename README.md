@@ -1,5 +1,5 @@
 # Intelligent Queue Prediction and Management System for Smart Campuses
-
+Project Link : https://intelligent-queue-prediction-and.onrender.com
 An intelligent queue management system designed specifically for smart campuses that predicts wait times and optimizes resource allocation using AI/ML techniques.
 
 ## Overview
