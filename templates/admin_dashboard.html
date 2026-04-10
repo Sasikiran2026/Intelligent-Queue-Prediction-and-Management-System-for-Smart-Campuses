@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard - Smart Queue</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.admin-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #10b981;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+  animation: slideIn 0.5s ease-out;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+}
+
+.admin-notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+</style>
+</head>
+
+<body class="bg-blue-50">
+
+<!-- Admin Notification Area -->
+<div id="adminNotification" class="admin-notification">
+  <h3 class="font-bold text-lg">🎉 Service Completed!</h3>
+  <p id="servedName" class="text-sm mt-1"></p>
+</div>
+
+<!-- Navigation Bar -->
+<nav class="bg-white shadow-md">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+        <div class="text-3xl">⏱️</div>
+        <h1 class="text-2xl font-bold text-blue-600">Smart Queue</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+        <a href="/admin" class="text-gray-600 hover:text-blue-600 font-semibold">📊 Dashboard</a>
+        <a href="/analytics" class="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 text-sm">📈 Analytics</a>
+        <a href="/live" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm">📺 Live Screen</a>
+        <a href="/live" class="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 text-sm">👁️ Live Queue</a>
+        <a href="/clear_history" class="bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 text-sm" 
+           onclick="return confirm('Are you sure you want to clear today\'s queue history? This will archive all records.')"
+           title="Clear today's queue history and archive records">🗑️ Clear History</a>
+        <a href="/logout" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 text-sm">📤 Logout</a>
+    </div>
+</div>
+</nav>
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-b from-blue-100 to-blue-50 py-8 text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Queue Management System</h1>
+    <p class="text-lg text-gray-600">Monitor and manage all campus service queues</p>
+</div>
+
+<!-- Stats Section -->
+<div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="grid grid-cols-3 gap-4 mb-10">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center border-l-4 border-blue-600">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Total Tokens</p>
+            <p class="text-4xl font-bold text-blue-600 mt-2">{{ stats.total }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center border-l-4 border-yellow-500">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Waiting</p>
+            <p class="text-4xl font-bold text-yellow-600 mt-2">{{ stats.waiting }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center border-l-4 border-green-600">
+            <p class="text-sm text-gray-500 font-semibold uppercase">Served</p>
+            <p class="text-4xl font-bold text-green-600 mt-2">{{ stats.served }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="max-w-7xl mx-auto px-6 pb-6">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">🔍 Filter & Search</h3>
+        <form method="get" class="flex gap-4 flex-wrap">
+            <input type="text" name="search" placeholder="Search name or token..." value="{{ request.args.get('search','') }}" class="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none flex-1 min-w-60" />
+            <select name="status" class="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none">
+                <option value="">All Status</option>
+                <option value="Waiting" {% if request.args.get('status')=='Waiting' %}selected{% endif %}>⏳ Waiting</option>
+                <option value="Serving" {% if request.args.get('status')=='Serving' %}selected{% endif %}>🔄 Serving</option>
+                <option value="Completed" {% if request.args.get('status')=='Completed' %}selected{% endif %}>✅ Completed</option>
+                <option value="Served" {% if request.args.get('status')=='Served' %}selected{% endif %}>✅ Served</option>
+            </select>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">Apply</button>
+        </form>
+    </div>
+</div>
+
+<!-- Queue Management Section -->
+<div class="max-w-7xl mx-auto px-6 pb-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">📋 Queue Management</h2>
+    
+    {% if queue %}
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-100 border-b-2 border-gray-300">
+                    <th class="text-left py-4 px-6 font-semibold text-gray-900">Token</th>
+                    <th class="text-left py-4 px-6 font-semibold text-gray-900">Student Name</th>
+                    <th class="text-left py-4 px-6 font-semibold text-gray-900">Department</th>
+                    <th class="text-center py-4 px-6 font-semibold text-gray-900">Status</th>
+                    <th class="text-left py-4 px-6 font-semibold text-gray-900">Time</th>
+                    <th class="text-center py-4 px-6 font-semibold text-gray-900">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in queue %}
+                <tr class="border-b border-gray-200 hover:bg-blue-50 transition">
+                    <td class="py-4 px-6 font-bold text-lg text-blue-600">#{{ q[1] }}</td>
+                    <td class="py-4 px-6 text-gray-700 font-medium">{{ q[2] }}</td>
+                    <td class="py-4 px-6 text-gray-700">{{ q[3] }}</td>
+                    <td class="py-4 px-6 text-center">
+                        {% if q[4] == 'Waiting' %}
+                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">⏳ Waiting</span>
+                        {% elif q[4] == 'Serving' %}
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">🔄 Serving</span>
+                        {% elif q[4] == 'Completed' %}
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">✅ Completed</span>
+                        {% elif q[4] == 'Served' %}
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">✅ Served</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-gray-600">{{ q[5] }}</td>
+                    <td class="py-4 px-6 text-center space-x-2">
+                        {% if q[4] == 'Waiting' %}
+                            <a href="/update/{{q[0]}}/Serving" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm font-semibold inline-block transition">🔄 Serve</a>
+                        {% elif q[4] == 'Serving' %}
+                            <a href="/update/{{q[0]}}/Served" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-semibold inline-block transition">✅ Done</a>
+                        {% elif q[4] == 'Completed' %}
+                            <a href="/update/{{q[0]}}/Served" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-semibold inline-block transition">✅ Confirm Done</a>
+                        {% else %}
+                            <span class="text-gray-400 text-sm">Completed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md p-12 text-center">
+        <p class="text-xl text-gray-500">No queue entries found matching your criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Handle served person animation for admins
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click handlers to all "Confirm Done" links
+  const confirmLinks = document.querySelectorAll('a[href*="/update/"], a[href*="Confirm"]');
+
+  confirmLinks.forEach(link => {
+    if (link.textContent.includes('Confirm Done') || link.href.includes('/update/')) {
+      link.addEventListener('click', function(e) {
+        // Extract name from the table row
+        const row = this.closest('tr');
+        if (row) {
+          const nameCell = row.querySelector('td:nth-child(2)'); // Student Name column
+          if (nameCell) {
+            const name = nameCell.textContent.trim();
+            showAdminNotification(name);
+          }
+        }
+      });
+    }
+  });
+
+  // Add notification for "Serve" button clicks
+  const serveLinks = document.querySelectorAll('a[href*="/update/"]');
+
+  serveLinks.forEach(link => {
+    if (link.textContent.includes('Serve') && !link.textContent.includes('Confirm')) {
+      link.addEventListener('click', function(e) {
+        // Extract name from the table row
+        const row = this.closest('tr');
+        if (row) {
+          const nameCell = row.querySelector('td:nth-child(2)');
+          if (nameCell) {
+            const name = nameCell.textContent.trim();
+            showServeNotification(name);
+          }
+        }
+      });
+    }
+  });
+});
+
+function showAdminNotification(name) {
+  const notification = document.getElementById('adminNotification');
+  const servedName = document.getElementById('servedName');
+
+  servedName.textContent = name + ' has been served!';
+  notification.classList.add('show');
+
+  // Hide after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
+
+function showServeNotification(name) {
+  const notification = document.getElementById('adminNotification');
+  const servedName = document.getElementById('servedName');
+
+  servedName.textContent = 'Now serving: ' + name;
+  notification.classList.add('show');
+
+  // Hide after 2 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 2000);
+}
+
+// Simple 10-second reload to keep the view up-to-date
+setTimeout(function(){ window.location.reload(); }, 10000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Advanced Analytics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100">
+
+<nav class="bg-white shadow-md">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+<h1 class="text-2xl font-bold text-blue-600">Admin Analytics</h1>
+<div class="space-x-4">
+<a href="/student" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Student Dashboard</a>
+<a href="/admin" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Back to Dashboard</a>
+</div>
+</div>
+</nav>
+
+<div class="max-w-7xl mx-auto py-10">
+
+<h1 class="text-3xl font-bold mb-8">AI Analytics Dashboard</h1>
+
+<div class="grid md:grid-cols-3 gap-6 mb-10">
+
+<div class="bg-white p-6 rounded-xl shadow">
+<h2>Total Users</h2>
+<p class="text-3xl font-bold text-blue-600">{{users}}</p>
+<div class="text-sm text-gray-600 mt-2">
+<span class="text-green-600">{{users_active}} active</span> • 
+<span class="text-orange-600">{{users_archive}} archived</span>
+</div>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow">
+<h2>Total Tokens</h2>
+<p class="text-3xl font-bold text-green-600">{{tokens}}</p>
+<div class="text-sm text-gray-600 mt-2">
+<span class="text-green-600">{{tokens_active}} active</span> • 
+<span class="text-orange-600">{{tokens_archive}} archived</span>
+</div>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow">
+<h2>Peak Hour</h2>
+<p class="text-3xl font-bold text-red-600">{{peak_hour}}</p>
+</div>
+
+</div>
+
+<div class="bg-white p-8 rounded-xl shadow">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('chart');
+
+new Chart(ctx, {
+type: 'line',
+data: {
+labels: {{hours | tojson}},
+datasets: [{
+label: 'Queue Load',
+data: {{data | tojson}},
+borderColor: '#3b82f6',
+fill: true
+}]
+}
+});
+</script>
+
+</body>
+</html>

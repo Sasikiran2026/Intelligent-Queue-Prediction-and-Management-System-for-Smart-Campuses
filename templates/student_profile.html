@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Profile - Smart Queue</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-blue-50">
+
+<!-- Navigation Bar -->
+<nav class="bg-white shadow-md">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+        <div class="text-3xl">⏱️</div>
+        <h1 class="text-2xl font-bold text-blue-600">Smart Queue</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+        <a href="/student" class="text-gray-600 hover:text-blue-600 font-semibold">🏠 Dashboard</a>
+        <a href="/my_queue_status" class="text-gray-600 hover:text-blue-600 font-semibold">📊 My Queues</a>
+        <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">📤 Logout</a>
+    </div>
+</div>
+</nav>
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-b from-blue-100 to-blue-50 py-8">
+    <div class="max-w-6xl mx-auto px-6">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">👤 My Profile</h1>
+        <p class="text-lg text-gray-600">Manage your account information</p>
+    </div>
+</div>
+
+<!-- Profile Content -->
+<div class="max-w-2xl mx-auto px-6 py-8">
+    <!-- Profile Card -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <div class="flex items-center mb-8">
+            <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-blue-400 rounded-full flex items-center justify-center text-white text-4xl mr-6">
+                👤
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900">{{ user_data[1] }}</h2>
+                <p class="text-lg text-gray-600">{{ user_data[4] }}</p>
+            </div>
+        </div>
+
+        <div class="border-t pt-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Account Information</h3>
+            
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 font-semibold uppercase">Email Address</p>
+                    <p class="text-lg text-gray-900 mt-1">{{ user_data[2] }}</p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 font-semibold uppercase">Phone Number</p>
+                    <p class="text-lg text-gray-900 mt-1">{{ user_data[3] }}</p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 font-semibold uppercase">Role</p>
+                    <p class="text-lg text-gray-900 mt-1 capitalize">
+                        {% if user_data[5] == 'student' %}
+                            👨‍🎓 Student
+                        {% else %}
+                            👨‍💼 {{ user_data[5] }}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded">
+                    <p class="text-sm text-gray-600 font-semibold uppercase">Member Since</p>
+                    <p class="text-lg text-gray-900 mt-1">{{ member_since }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Card -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <h3 class="text-xl font-bold text-gray-900 mb-6">📈 Queue Statistics</h3>
+        
+        <div class="grid grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg text-center border-l-4 border-blue-600">
+                <p class="text-sm text-gray-600 font-semibold uppercase">Total Tokens</p>
+                <p class="text-3xl font-bold text-blue-600 mt-2">{{ stats['total'] }}</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg text-center border-l-4 border-yellow-500">
+                <p class="text-sm text-gray-600 font-semibold uppercase">Waiting</p>
+                <p class="text-3xl font-bold text-yellow-600 mt-2">{{ stats['waiting'] }}</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg text-center border-l-4 border-green-600">
+                <p class="text-sm text-gray-600 font-semibold uppercase">Served</p>
+                <p class="text-3xl font-bold text-green-600 mt-2">{{ stats['served'] }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Actions</h3>
+        
+        <div class="space-y-3">
+            <a href="/student" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center px-6 py-3 rounded-lg font-semibold transition">
+                🏠 Back to Dashboard
+            </a>
+            <a href="/my_queue_status" class="block w-full bg-green-600 hover:bg-green-700 text-white text-center px-6 py-3 rounded-lg font-semibold transition">
+                📊 View My Queues
+            </a>
+            <a href="/logout" class="block w-full bg-red-600 hover:bg-red-700 text-white text-center px-6 py-3 rounded-lg font-semibold transition">
+                📤 Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

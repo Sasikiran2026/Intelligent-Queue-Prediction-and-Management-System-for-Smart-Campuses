@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Campus Queue Monitor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<meta http-equiv="refresh" content="5">
+</head>
+
+<body class="bg-black text-white">
+
+<div class="p-6">
+
+<h1 class="text-center text-4xl font-bold mb-8">
+Smart Campus Queue
+</h1>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+
+<div class="bg-blue-600 p-6 rounded-xl text-center">
+<h2>Total</h2>
+<p class="text-3xl">{{total}}</p>
+</div>
+
+<div class="bg-yellow-500 p-6 rounded-xl text-center">
+<h2>Waiting</h2>
+<p class="text-3xl">{{waiting}}</p>
+</div>
+
+<div class="bg-green-600 p-6 rounded-xl text-center">
+<h2>Serving</h2>
+<p class="text-3xl">{{serving}}</p>
+</div>
+
+<div class="bg-red-600 p-6 rounded-xl text-center">
+<h2>Served</h2>
+<p class="text-3xl">{{served}}</p>
+</div>
+
+</div>
+
+<div class="bg-gray-900 p-6 rounded-xl">
+<table class="w-full text-lg">
+<tr class="border-b border-gray-700">
+<th>Token</th>
+<th>Name</th>
+<th>Dept</th>
+<th>Status</th>
+</tr>
+
+{% for q in queue %}
+<tr class="border-b border-gray-700">
+<td>{{q.token}}</td>
+<td>{{q.name}}</td>
+<td>{{q.department}}</td>
+<td class="text-yellow-400">{{q.status}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+</div>
+
+</body>
+</html>

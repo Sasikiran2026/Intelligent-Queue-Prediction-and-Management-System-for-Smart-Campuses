@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Queue Status - Smart Queue</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.serving-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 20px 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+  z-index: 1000;
+  animation: slideDownBounce 0.8s ease-out;
+  display: none;
+}
+
+@keyframes slideDownBounce {
+  0% { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+  50% { transform: translateX(-50%) translateY(10px); opacity: 0.9; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.notification-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
+  font-size: 20px;
+  opacity: 0.8;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+</style>
+</head>
+
+<body class="bg-blue-50">
+
+<!-- Serving Notification Banner -->
+<div id="servingNotification" class="serving-notification">
+  <span class="notification-close" onclick="closeNotification()">&times;</span>
+  <div class="flex items-center space-x-3">
+    <div class="text-3xl animate-bounce">🎯</div>
+    <div>
+      <h3 class="font-bold text-lg">You're Being Served Now!</h3>
+      <p class="text-sm opacity-90">Please proceed to the counter for your {{ servingDept }} service.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Bar -->
+<nav class="bg-white shadow-md">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+        <div class="text-3xl">⏱️</div>
+        <h1 class="text-2xl font-bold text-blue-600">Smart Queue</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+        <a href="/student" class="text-gray-600 hover:text-blue-600 font-semibold">🏠 Dashboard</a>
+        <a href="/profile" class="text-gray-600 hover:text-blue-600 font-semibold">👤 Profile</a>
+        <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">📤 Logout</a>
+    </div>
+</div>
+</nav>
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-b from-blue-100 to-blue-50 py-8">
+    <div class="max-w-6xl mx-auto px-6">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">📊 My Queue Status</h1>
+        <p class="text-lg text-gray-600">Track your position in real-time</p>
+    </div>
+</div>
+
+<!-- Queue Cards -->
+<div class="max-w-6xl mx-auto px-6 py-8">
+    {% if queues %}
+        {% for q in queues %}
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">{{ q[3] }}</h2>
+                    <p class="text-gray-600">
+                        {% if q[3] == 'Library' %}
+                            Book issue, return, and general library services
+                        {% elif q[3] == 'Cafeteria' %}
+                            Food & beverage services and dining inquiries
+                        {% elif q[3] == 'Accounts' %}
+                            Fee payments, receipts, and account services
+                        {% elif q[3] == 'Exam Cell' %}
+                            Exam forms, transcripts, and certificates
+                        {% endif %}
+                    </p>
+                </div>
+                <span class="
+                    {% if q[4] == 'Waiting' %}
+                        bg-yellow-100 text-yellow-800
+                    {% elif q[4] == 'Serving' %}
+                        bg-blue-100 text-blue-800
+                    {% elif q[4] == 'Completed' %}
+                        bg-purple-100 text-purple-800
+                    {% elif q[4] == 'Served' %}
+                        bg-green-100 text-green-800
+                    {% endif %}
+                    px-4 py-2 rounded-full font-semibold text-lg">
+                    {% if q[4] == 'Waiting' %}⏳ Waiting
+                    {% elif q[4] == 'Serving' %}🔄 Serving
+                    {% elif q[4] == 'Completed' %}✅ Completed
+                    {% elif q[4] == 'Served' %}✅ Served
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-4 gap-4 mb-6 py-6 border-t border-b border-gray-200">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-600">{{ q[1] }}</div>
+                    <div class="text-sm text-gray-600 font-semibold">Queue #</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-green-600">
+                        {% set total_waiting = get_queue_position(q[1], q[3]) %}
+                        {{ total_waiting }}
+                    </div>
+                    <div class="text-sm text-gray-600 font-semibold">Position</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600">
+                        {% if q[3] == 'Library' %}
+                            {{ total_waiting * 5 }}
+                        {% elif q[3] == 'Cafeteria' %}
+                            {{ total_waiting * 3 }}
+                        {% elif q[3] == 'Accounts' %}
+                            {{ total_waiting * 7 }}
+                        {% elif q[3] == 'Exam Cell' %}
+                            {{ total_waiting * 6 }}
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-600 font-semibold">ETA (min)</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-gray-400">-</div>
+                    <div class="text-sm text-gray-600 font-semibold">Counter</div>
+                </div>
+            </div>
+
+            <!-- Info Message -->
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6 rounded">
+                <p class="text-gray-700">
+                    {% if q[4] == 'Served' %}
+                        ✅ Your service has been completed!
+                    {% elif q[4] == 'Completed' %}
+                        ✅ You have marked your service as completed. Waiting for admin confirmation.
+                    {% elif q[4] == 'Serving' %}
+                        🔄 You are being served now. Please report to the counter and click 'Mark as Served' when your service is complete.
+                    {% else %}
+                        ℹ️ Your turn is coming up soon! Please keep watching for updates.
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Actions -->
+            {% if q[4] not in ['Served', 'Completed'] %}
+            <div class="flex justify-end space-x-4">
+                {% if q[4] == 'Serving' %}
+                <a href="/mark_served/{{ q[0] }}" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center space-x-2">
+                    <span>✅</span>
+                    <span>Mark as Served</span>
+                </a>
+                {% endif %}
+                <a href="/leave_queue/{{ q[0] }}" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center space-x-2">
+                    <span>✕</span>
+                    <span>Leave Queue</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+        <div class="text-6xl mb-4">📭</div>
+        <p class="text-2xl text-gray-700 font-semibold mb-2">No Active Queues</p>
+        <p class="text-gray-600 mb-6">You are not currently in any queue.</p>
+        <a href="/student" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-block transition">
+            🏠 Back to Dashboard
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Queue data for JavaScript
+const queues = {{ queues | tojson }};
+
+// Request notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        });
+    }
+}
+
+// Show browser notification
+function showBrowserNotification(dept) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('🎯 You\'re Being Served!', {
+            body: `Please proceed to the counter for your ${dept} service.`,
+            icon: '/static/favicon.ico', // You can add a favicon
+            badge: '/static/badge.png',
+            tag: 'serving-notification', // Prevents duplicate notifications
+            requireInteraction: true
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+
+        // Auto close after 10 seconds
+        setTimeout(() => {
+            notification.close();
+        }, 10000);
+    }
+}
+
+// Show in-app notification banner
+function showServingNotification(dept) {
+    const notification = document.getElementById('servingNotification');
+    const deptElement = notification.querySelector('p');
+    deptElement.textContent = `Please proceed to the counter for your ${dept} service.`;
+
+    notification.style.display = 'block';
+
+    // Auto hide after 15 seconds
+    setTimeout(() => {
+        if (notification.style.display !== 'none') {
+            closeNotification();
+        }
+    }, 15000);
+}
+
+// Close notification banner
+function closeNotification() {
+    const notification = document.getElementById('servingNotification');
+    notification.style.display = 'none';
+}
+
+// Check for serving status and show notifications
+function checkForServingNotification() {
+    // Check if we already showed notification for this session
+    const notifiedKey = 'serving_notified_' + new Date().toDateString();
+    const alreadyNotified = localStorage.getItem(notifiedKey);
+
+    if (alreadyNotified) {
+        // Check if any queue is still serving, if not, clear the flag
+        const hasServing = queues.some(q => q[4] === 'Serving');
+        if (!hasServing) {
+            localStorage.removeItem(notifiedKey);
+        }
+        return;
+    }
+
+    // Check if any queue is being served
+    const servingQueue = queues.find(q => q[4] === 'Serving');
+    if (servingQueue) {
+        const dept = servingQueue[3];
+
+        // Show in-app notification
+        showServingNotification(dept);
+
+        // Show browser notification
+        showBrowserNotification(dept);
+
+        // Mark as notified for today
+        localStorage.setItem(notifiedKey, 'true');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Request notification permission
+    requestNotificationPermission();
+
+    // Check for serving notifications
+    checkForServingNotification();
+
+    // Auto-refresh every 10 seconds
+    setTimeout(() => {
+        window.location.reload();
+    }, 10000);
+});
+</script>
+
+</body>
+</html>

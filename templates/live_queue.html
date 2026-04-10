@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Live Queue Display</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@keyframes slideIn {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes highlight {
+  0% { background-color: rgba(34, 197, 94, 0.3); transform: scale(1); }
+  50% { background-color: rgba(34, 197, 94, 0.6); transform: scale(1.05); }
+  100% { background-color: rgba(34, 197, 94, 0.3); transform: scale(1); }
+}
+
+.queue-item {
+  animation: slideIn 0.5s ease-out;
+  transition: all 0.3s ease;
+}
+
+.serving-animation {
+  animation: highlight 2s infinite;
+}
+
+.served-animation {
+  animation: slideOut 1s ease-in forwards;
+}
+
+.position-highlight {
+  background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  animation: highlight 3s infinite;
+}
+
+.admin-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #10b981;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+  animation: slideIn 0.5s ease-out;
+}
+</style>
+</head>
+
+<body class="bg-black text-white min-h-screen">
+
+<!-- Admin Notification Area -->
+<div id="adminNotification" class="admin-notification hidden">
+  <h3 class="font-bold text-lg">🎉 Service Completed!</h3>
+  <p id="servedName" class="text-sm mt-1"></p>
+</div>
+
+<div class="p-10">
+
+<h1 class="text-4xl font-bold text-center mb-10">
+Campus Live Queue System
+</h1>
+
+<div class="grid grid-cols-3 gap-6 mb-10">
+
+<div class="bg-blue-600 p-6 rounded-xl text-center">
+<h2 class="text-xl">Total</h2>
+<p class="text-3xl font-bold">{{total}}</p>
+</div>
+
+<div class="bg-yellow-500 p-6 rounded-xl text-center">
+<h2 class="text-xl">Waiting</h2>
+<p class="text-3xl font-bold">{{waiting}}</p>
+</div>
+
+<div class="bg-green-600 p-6 rounded-xl text-center">
+<h2 class="text-xl">Served</h2>
+<p class="text-3xl font-bold">{{served}}</p>
+</div>
+
+</div>
+
+<!-- Animated Queue Display -->
+<div class="bg-gray-900 p-8 rounded-xl mb-8">
+<h2 class="text-2xl mb-6 text-center">🎯 Live Queue Positions</h2>
+
+<div class="mb-4 text-center">
+  <p class="text-gray-400">Now Serving: <span class="text-blue-400 font-bold text-xl">
+    {% for q in queue %}
+      {% if q[4] == 'Serving' %}#{{q[1]}} - {{q[2]}}{% endif %}
+    {% endfor %}
+    {% if not queue or not queue[0] %}None{% endif %}
+  </span></p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="queueContainer">
+{% set position = 1 %}
+{% for q in queue %}
+{% if q[4] != 'Served' %}
+<div class="queue-item bg-gray-800 p-6 rounded-lg border-2 {% if current_user and q[2] == current_user %}position-highlight border-blue-400{% else %}border-gray-600{% endif %}">
+  <div class="flex justify-between items-center mb-3">
+    <div class="text-3xl font-bold text-blue-400">#{{q[1]}}</div>
+    <div class="text-right">
+      <div class="text-sm px-3 py-1 rounded-full {% if q[4] == 'Waiting' %}bg-yellow-600{% elif q[4] == 'Serving' %}bg-blue-600 serving-animation{% elif q[4] == 'Completed' %}bg-purple-600{% endif %}">
+        {% if q[4] == 'Waiting' %}⏳{% elif q[4] == 'Serving' %}🔄{% elif q[4] == 'Completed' %}✅{% endif %}
+        {{q[4]}}
+      </div>
+      <div class="text-xs text-gray-400 mt-1">Position: {{ position }}</div>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <div class="flex items-center">
+      <span class="text-gray-400 w-16">Name:</span>
+      <span class="font-semibold">{{q[2]}}</span>
+      {% if current_user and q[2] == current_user %}
+      <span class="ml-2 text-xs bg-blue-600 px-2 py-1 rounded animate-pulse">YOU</span>
+      {% endif %}
+    </div>
+    <div class="flex items-center">
+      <span class="text-gray-400 w-16">Dept:</span>
+      <span>{{q[3]}}</span>
+    </div>
+    <div class="flex items-center">
+      <span class="text-gray-400 w-16">Time:</span>
+      <span>{{q[5]}}</span>
+    </div>
+    {% if q[4] == 'Waiting' %}
+    <div class="flex items-center">
+      <span class="text-gray-400 w-16">ETA:</span>
+      <span class="text-green-400">
+        {% set dept_time = {'Library': 5, 'Cafeteria': 3, 'Accounts': 7, 'Exam Cell': 6} %}
+        {% set base_time = dept_time.get(q[3], 5) %}
+        ~{{ (position - 1) * base_time }} min
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if user_role == 'admin' and q[4] == 'Completed' %}
+  <div class="mt-4">
+    <a href="/update/{{q[0]}}/Served" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition block text-center served-link" data-name="{{q[2]}}">
+      ✅ Confirm Done
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% set position = position + 1 %}
+{% endif %}
+{% endfor %}
+</div>
+
+{% if not queue %}
+<div class="text-center py-12">
+  <div class="text-6xl mb-4">🎉</div>
+  <p class="text-xl text-gray-400">Queue is currently empty!</p>
+</div>
+{% endif %}
+</div>
+
+<!-- Traditional Table View (for admins) -->
+{% if user_role == 'admin' %}
+<div class="bg-gray-900 p-8 rounded-xl mb-8">
+<h2 class="text-2xl mb-4">📋 Detailed Queue Table</h2>
+
+<table class="w-full text-left">
+<tr class="border-b border-gray-700">
+<th class="py-3 px-4">Token</th>
+<th class="py-3 px-4">Name</th>
+<th class="py-3 px-4">Dept</th>
+<th class="py-3 px-4">Status</th>
+<th class="py-3 px-4">Time</th>
+<th class="py-3 px-4">Actions</th>
+</tr>
+
+{% for q in queue %}
+<tr class="border-b border-gray-700 hover:bg-gray-800 transition">
+<td class="py-3 px-4 font-bold text-blue-400">#{{q[1]}}</td>
+<td class="py-3 px-4">{{q[2]}}</td>
+<td class="py-3 px-4">{{q[3]}}</td>
+<td class="py-3 px-4">
+  <span class="{% if q[4] == 'Waiting' %}text-yellow-400{% elif q[4] == 'Serving' %}text-blue-400{% elif q[4] == 'Completed' %}text-purple-400{% elif q[4] == 'Served' %}text-green-400{% endif %}">
+    {{q[4]}}
+  </span>
+</td>
+<td class="py-3 px-4 text-gray-400">{{q[5]}}</td>
+<td class="py-3 px-4">
+  {% if q[4] == 'Waiting' %}
+    <a href="/update/{{q[0]}}/Serving" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition">Serve</a>
+  {% elif q[4] == 'Serving' %}
+    <a href="/update/{{q[0]}}/Served" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition">Done</a>
+  {% elif q[4] == 'Completed' %}
+    <a href="/update/{{q[0]}}/Served" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition served-link" data-name="{{q[2]}}">Confirm</a>
+  {% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endif %}
+
+<div class="mt-10 bg-gray-900 p-8 rounded-xl">
+<h2 class="text-2xl mb-4">AI Peak Hour Prediction</h2>
+<p class="text-xl text-green-400">{{peak_hour}}</p>
+
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('chart');
+
+new Chart(ctx, {
+type: 'line',
+data: {
+labels: {{hours | tojson}},
+datasets: [{
+label: 'Visitors',
+data: {{visitors | tojson}},
+borderColor: '#3b82f6',
+backgroundColor: 'rgba(59,130,246,0.2)',
+fill: true
+}]
+}
+});
+
+// Handle served person animation for admins
+document.addEventListener('DOMContentLoaded', function() {
+  const servedLinks = document.querySelectorAll('.served-link');
+
+  servedLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      const name = this.getAttribute('data-name');
+      showAdminNotification(name);
+    });
+  });
+});
+
+function showAdminNotification(name) {
+  const notification = document.getElementById('adminNotification');
+  const servedName = document.getElementById('servedName');
+
+  servedName.textContent = name + ' has been served!';
+  notification.classList.remove('hidden');
+
+  // Hide after 3 seconds
+  setTimeout(() => {
+    notification.classList.add('hidden');
+  }, 3000);
+}
+
+// Auto-refresh every 5 seconds with smooth animations
+setTimeout(function(){
+  location.reload();
+}, 5000);
+
+// Student notification system (only for students, not admins)
+{% if user_role != 'admin' %}
+// Queue data for JavaScript
+const queueData = {{ queue | tojson }};
+const currentUser = "{{ current_user }}";
+
+// Request notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        });
+    }
+}
+
+// Show browser notification for serving
+function showBrowserNotification(dept) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('🎯 You\'re Being Served!', {
+            body: `Please proceed to the counter for your ${dept} service.`,
+            icon: '/static/favicon.ico',
+            badge: '/static/badge.png',
+            tag: 'serving-notification',
+            requireInteraction: true
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+
+        setTimeout(() => {
+            notification.close();
+        }, 10000);
+    }
+}
+
+// Check for serving status and show notifications
+function checkForServingNotification() {
+    if (!currentUser) return;
+
+    // Check if we already showed notification for this session
+    const notifiedKey = 'live_serving_notified_' + new Date().toDateString();
+    const alreadyNotified = localStorage.getItem(notifiedKey);
+
+    if (alreadyNotified) {
+        // Check if user is still being served
+        const userServing = queueData.some(q => q[2] === currentUser && q[4] === 'Serving');
+        if (!userServing) {
+            localStorage.removeItem(notifiedKey);
+        }
+        return;
+    }
+
+    // Check if current user is being served
+    const userQueue = queueData.find(q => q[2] === currentUser && q[4] === 'Serving');
+    if (userQueue) {
+        const dept = userQueue[3];
+
+        // Show browser notification
+        showBrowserNotification(dept);
+
+        // Mark as notified for today
+        localStorage.setItem(notifiedKey, 'true');
+
+        // Also show an alert for immediate attention
+        setTimeout(() => {
+            alert(`🎯 You're being served now!\nPlease proceed to the counter for your ${dept} service.`);
+        }, 1000);
+    }
+}
+
+// Initialize notifications on page load
+document.addEventListener('DOMContentLoaded', function() {
+    requestNotificationPermission();
+    checkForServingNotification();
+});
+{% endif %}
+</script>
+
+</body>
+</html>

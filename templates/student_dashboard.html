@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Dashboard - Smart Queue</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-blue-50">
+
+<!-- Navigation Bar -->
+<nav class="bg-white shadow-md">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+        <div class="text-3xl">⏱️</div>
+        <h1 class="text-2xl font-bold text-blue-600">Smart Queue</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+        <a href="/student" class="text-gray-600 hover:text-blue-600 font-semibold">🏠 Dashboard</a>
+        <a href="/my_queue_status" class="text-gray-600 hover:text-blue-600 font-semibold">📊 My Queues</a>
+        <a href="/profile" class="text-gray-600 hover:text-blue-600 font-semibold">👤 Profile</a>
+        <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">📤 Logout</a>
+    </div>
+</div>
+</nav>
+
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-b from-blue-50 to-white py-12 text-center">
+    <div class="max-w-3xl mx-auto">
+        <div class="inline-block bg-blue-600 text-white px-4 py-2 rounded-full mb-4">
+            <div class="text-4xl">⏰</div>
+        </div>
+        <h1 class="text-5xl font-bold text-gray-900 mb-4">Welcome to Smart Queue</h1>
+        <p class="text-xl text-gray-600">Skip the physical lines! Join virtual queues for campus services and get real-time updates on your position.</p>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="max-w-7xl mx-auto px-6 py-6">
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <p class="text-sm text-gray-500 font-semibold">Total Tokens</p>
+            <p class="text-3xl font-bold text-blue-600">{{ stats.total }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <p class="text-sm text-gray-500 font-semibold">Waiting in Queues</p>
+            <p class="text-3xl font-bold text-yellow-600">{{ stats.waiting }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow text-center">
+            <p class="text-sm text-gray-500 font-semibold">Served</p>
+            <p class="text-3xl font-bold text-green-600">{{ stats.served }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Department Cards Grid -->
+<div class="max-w-7xl mx-auto px-6 pb-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-8">Select Service & Join Queue</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Library Card -->
+        <form method="POST" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl mr-4">
+                        📚
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Library</h3>
+                        <p class="text-sm text-gray-500">Queue Status</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Book issue, return, and general library services</p>
+                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                    <span>⏱️ ~5 min/person</span>
+                    <span>ETA: ~{{ (stats.waiting * 5) if stats.waiting else 0 }} min</span>
+                </div>
+                <input type="hidden" name="department" value="Library">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">
+                    ➕ Join Queue
+                </button>
+            </div>
+        </form>
+
+        <!-- Cafeteria Card -->
+        <form method="POST" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-3xl mr-4">
+                        🍽️
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Cafeteria</h3>
+                        <p class="text-sm text-gray-500">Queue Status</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Food & beverage services and dining inquiries</p>
+                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                    <span>⏱️ ~3 min/person</span>
+                    <span>ETA: ~{{ (stats.waiting * 3) if stats.waiting else 0 }} min</span>
+                </div>
+                <input type="hidden" name="department" value="Cafeteria">
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-lg transition">
+                    ➕ Join Queue
+                </button>
+            </div>
+        </form>
+
+        <!-- Accounts Card -->
+        <form method="POST" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl mr-4">
+                        💰
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Accounts</h3>
+                        <p class="text-sm text-gray-500">Queue Status</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Fee payments, receipts, and account services</p>
+                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                    <span>⏱️ ~7 min/person</span>
+                    <span>ETA: ~{{ (stats.waiting * 7) if stats.waiting else 0 }} min</span>
+                </div>
+                <input type="hidden" name="department" value="Accounts">
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition">
+                    ➕ Join Queue
+                </button>
+            </div>
+        </form>
+
+        <!-- Exam Cell Card -->
+        <form method="POST" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mr-4">
+                        📝
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Exam Cell</h3>
+                        <p class="text-sm text-gray-500">Queue Status</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">Exam forms, transcripts, and certificates</p>
+                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                    <span>⏱️ ~6 min/person</span>
+                    <span>ETA: ~{{ (stats.waiting * 6) if stats.waiting else 0 }} min</span>
+                </div>
+                <input type="hidden" name="department" value="Exam Cell">
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition">
+                    ➕ Join Queue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Recent Queue Section -->
+<div class="bg-white py-12 border-t">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Queue History</h2>
+        
+        <!-- Search Form -->
+        <form method="get" class="mb-6">
+            <input type="text" name="search" placeholder="🔍 Search past tokens..." value="{{ request.args.get('search','') }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none" />
+        </form>
+
+        <!-- Queue Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b-2 border-gray-300">
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Token #</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Department</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-900">Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in queue %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 font-bold text-blue-600">#{{ q[1] }}</td>
+                        <td class="py-3 px-4 text-gray-700">{{ q[3] }}</td>
+                        <td class="py-3 px-4">
+                            {% if q[4] == 'Waiting' %}
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">⏳ {{ q[4] }}</span>
+                            {% elif q[4] == 'Serving' %}
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">🔄 {{ q[4] }}</span>
+                            {% elif q[4] == 'Served' %}
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">✅ {{ q[4] }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-gray-600">{{ q[5] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not queue %}
+        <div class="text-center py-8 text-gray-500">
+            <p class="text-lg">No queue history yet. Get started by joining a queue above!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Queue data for JavaScript - get from the table
+const queueRows = document.querySelectorAll('tbody tr');
+const userQueues = [];
+
+queueRows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+        const token = cells[0].textContent.trim();
+        const dept = cells[1].textContent.trim();
+        const status = cells[2].textContent.trim();
+        userQueues.push({
+            token: token,
+            department: dept,
+            status: status
+        });
+    }
+});
+
+// Request notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        });
+    }
+}
+
+// Show browser notification for serving
+function showBrowserNotification(dept) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('🎯 You\'re Being Served!', {
+            body: `Please proceed to the counter for your ${dept} service.`,
+            icon: '/static/favicon.ico',
+            tag: 'dashboard-serving-notification',
+            requireInteraction: true
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+
+        setTimeout(() => {
+            notification.close();
+        }, 10000);
+    }
+}
+
+// Check for serving status and show notifications
+function checkForServingNotification() {
+    // Check if we already showed notification for this session
+    const notifiedKey = 'dashboard_serving_notified_' + new Date().toDateString();
+    const alreadyNotified = localStorage.getItem(notifiedKey);
+
+    if (alreadyNotified) {
+        // Check if any queue is still serving
+        const hasServing = userQueues.some(q => q.status === 'Serving');
+        if (!hasServing) {
+            localStorage.removeItem(notifiedKey);
+        }
+        return;
+    }
+
+    // Check if any queue is being served
+    const servingQueue = userQueues.find(q => q.status === 'Serving');
+    if (servingQueue) {
+        const dept = servingQueue.department;
+
+        // Show browser notification
+        showBrowserNotification(dept);
+
+        // Mark as notified for today
+        localStorage.setItem(notifiedKey, 'true');
+
+        // Also show an alert for immediate attention
+        setTimeout(() => {
+            alert(`🎯 You're being served now!\nPlease proceed to the counter for your ${dept} service.`);
+        }, 1000);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Request notification permission
+    requestNotificationPermission();
+
+    // Check for serving notifications
+    checkForServingNotification();
+
+    // Auto-refresh every 15 seconds (less frequent for dashboard)
+    setTimeout(() => {
+        window.location.reload();
+    }, 15000);
+});
+</script>
+
+</body>
+</html>

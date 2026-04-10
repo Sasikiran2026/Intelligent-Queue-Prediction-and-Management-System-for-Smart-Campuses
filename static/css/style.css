@@ -1,0 +1,79 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  background: #f9f9f9;
+  color: #333;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #004aad;
+  color: #fff;
+}
+
+.logo {
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+nav .btn {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #fff;
+  transition: 0.3s;
+}
+
+nav .btn:hover {
+  background: #fff;
+  color: #004aad;
+}
+
+.btn-primary {
+  background: #ff9800;
+  border: none;
+}
+
+.hero {
+  background: linear-gradient(to right, #004aad, #0077ff);
+  color: #fff;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.hero .highlight {
+  color: #ffeb3b;
+  font-weight: bold;
+}
+
+.features {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  font-weight: 500;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  background: #004aad;
+  color: #fff;
+}
